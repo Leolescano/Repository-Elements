@@ -4,16 +4,12 @@ import exceptions.InvalidDatesException;
 import interfaces.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.InputMismatchException;
-import java.util.List;
-import lombok.Getter;
-import utils.Util;
-
+import java.util.*;
 import javax.swing.*;
+import lombok.Getter;
 
-public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, DeleteElement {
+public class Repository<T>
+    implements Save<T>, Count, Find<T>, ShowRepository, DeleteElement, SortedBy {
 
   @Getter private List<T> repository;
 
@@ -35,10 +31,18 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
       }
       if (!repeat) {
         this.repository.add(element);
-        JOptionPane.showMessageDialog (null,"The product was saved successfully", "Saved Successfully", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null,
+            "The product was saved successfully",
+            "CONFIRMATION",
+            JOptionPane.INFORMATION_MESSAGE);
 
       } else {
-        JOptionPane.showMessageDialog (null, "The product already existed in the repository, so only the stock was updated", "Confirmation", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null,
+            "The product already existed in the repository, so only the stock was updated",
+            "CONFIRMATION",
+            JOptionPane.WARNING_MESSAGE);
       }
     }
 
@@ -51,10 +55,18 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
       }
       if (!repeat) {
         this.repository.add(element);
-        JOptionPane.showMessageDialog (null,"The country was saved successfully", "Saved Successfully", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null,
+            "The country was saved successfully",
+            "CONFIRMATION",
+            JOptionPane.INFORMATION_MESSAGE);
 
       } else {
-        JOptionPane.showMessageDialog (null, "The ISO code was already used in the repository. Enter the country data again", "Attention", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null,
+            "The ISO code was already used in the repository. Enter the country data again",
+            "ATTENTION",
+            JOptionPane.WARNING_MESSAGE);
       }
     }
     if (element instanceof User) {
@@ -66,10 +78,18 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
       }
       if (!repeat) {
         this.repository.add(element);
-        JOptionPane.showMessageDialog (null,"The user was saved successfully", "Saved Successfully", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null,
+            "The user was saved successfully",
+            "CONFIRMATION",
+            JOptionPane.INFORMATION_MESSAGE);
 
       } else {
-        JOptionPane.showMessageDialog (null, "That e-mail has already been registered in the repository", "Attention", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null,
+            "That e-mail has already been registered in the repository",
+            "ATTENTION",
+            JOptionPane.WARNING_MESSAGE);
       }
     }
   }
@@ -77,10 +97,15 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
   @Override
   public void count(String typeRepository) {
     if (this.repository.size() > 0) {
-      JOptionPane.showMessageDialog(null, "The repository contains" + this.repository.size() + " " + typeRepository, "Information", JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(
+          null,
+          "The repository contains " + this.repository.size() + " " + typeRepository,
+          "INFORMATION",
+          JOptionPane.INFORMATION_MESSAGE);
 
     } else {
-      JOptionPane.showMessageDialog(null, "The repository is empty", "Information", JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(
+          null, "The repository is empty", "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
     }
   }
 
@@ -88,12 +113,22 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
   public T find(String typeRepository) {
     String indexStr;
     if (this.repository.size() == 0) {
-      JOptionPane.showMessageDialog(null, "The repository is empty", "Information", JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(
+          null, "The repository is empty", "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
       return null;
     }
     while (true) {
       try {
-        indexStr = JOptionPane.showInputDialog(null, "Enter the position of the " + typeRepository + " within the repository", "Search");
+        indexStr =
+            JOptionPane.showInputDialog(
+                null,
+                "Enter the position of the " + typeRepository + " within the repository",
+                "SEARCH",
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (indexStr == null) {
+          return null;
+        }
         int index = Integer.parseInt(indexStr) - 1;
 
         if (index < this.repository.size() && index >= 0) {
@@ -102,21 +137,24 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
           throw new InvalidDatesException("That position does not exist in the repository");
         }
       } catch (InputMismatchException e) {
-        JOptionPane.showMessageDialog(null, "You must enter an integer", "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(
+            null, "You must enter an integer", "INVALID DATE", JOptionPane.ERROR_MESSAGE);
       } catch (InvalidDatesException e) {
-        JOptionPane.showMessageDialog(null, e.getMessage(), "Attention", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, e.getMessage(), "ATTENTION", JOptionPane.ERROR_MESSAGE);
         return null;
       }
     }
   }
 
-  public void getAllSortedBy(String atributo) { // name stock iso
+  @Override
+  public void getAllSortedBy(String atributo) {
     Comparator comparator =
         Comparator.comparing(
             element -> {
               try {
                 Method method =
-                    element.getClass()
+                    element
+                        .getClass()
                         .getMethod(
                             "get" + atributo.substring(0, 1).toUpperCase() + atributo.substring(1));
                 return (Comparable) method.invoke(element);
@@ -130,45 +168,78 @@ public class Repository<T> implements Save<T>, Count, Find<T>, ShowRepository, D
   }
 
   @Override
-  public void showRepository() {
+  public void showRepository(String typeRepository) {
     if (this.repository.size() > 0) {
       int cont = 1;
-      //System.out.println();
-      for (T element : this.repository) {
-        JOptionPane.showMessageDialog(null,  """
-                Index:%d ->
-                %s
-                """.formatted(cont, element));
-        cont++;
-      }
+      Collection<T> items = this.repository;
+
+      T[] array = (T[]) items.toArray(new Object[items.size()]);
+      JList<T> list = new JList<>(array);
+      JOptionPane.showMessageDialog(
+          null,
+          new JScrollPane(list),
+          typeRepository.toUpperCase(),
+          JOptionPane.INFORMATION_MESSAGE);
+
+      //      for (T element : this.repository) {
+      //        JOptionPane.showMessageDialog(
+      //            null,
+      //            """
+      //                %s -> %d
+      //                %s
+      //                """
+      //                .formatted(typeRepository, cont, element));
+      //        cont++;
+      //      }
     } else {
-      JOptionPane.showMessageDialog(null, "The repository is empty", "Information", JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(
+          null, "The repository is empty", "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
     }
   }
 
   @Override
-  public void deleteElement() {
+  public void deleteElement(String typeRepository) {
     int index;
+    String indexStr;
     if (this.repository.size() == 0) {
-      JOptionPane.showMessageDialog(null, "The repository is empty", "Information", JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(
+          null, "The repository is empty", "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
     }
     while (true) {
       try {
-        System.out.print("Enter the position of the element to delete: ");
-        index = Util.SC.nextInt() - 1;
-        Util.SC.nextLine();
+        indexStr =
+            JOptionPane.showInputDialog(
+                null,
+                "Enter the position of the " + typeRepository + " to delete",
+                "DELETE",
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (indexStr == null) {
+          return;
+        }
+
+        index = Integer.parseInt(indexStr) - 1;
         if (index < this.repository.size() && index >= 0) {
+          Element element = (Element) this.repository.get(index);
           this.repository.remove(index);
-          System.out.println("The item was successfully removed.");
+          JOptionPane.showMessageDialog(
+              null,
+              """
+                          %s
+                          Was successfully removed
+                          """
+                  .formatted(element),
+              "DELETE",
+              JOptionPane.INFORMATION_MESSAGE);
           return;
         } else {
           throw new InvalidDatesException("That position does not exist in the repository");
         }
       } catch (InputMismatchException e) {
-        System.out.println("You must enter an integer.");
-        Util.SC.nextLine();
+        JOptionPane.showMessageDialog(
+            null, "You must enter an integer", "ERROR", JOptionPane.ERROR_MESSAGE);
       } catch (InvalidDatesException e) {
-        System.out.println(e.getMessage());
+        JOptionPane.showMessageDialog(null, e.getMessage(), "ATTENTION", JOptionPane.ERROR_MESSAGE);
       }
     }
   }

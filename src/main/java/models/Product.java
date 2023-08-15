@@ -18,11 +18,9 @@ public class Product extends Element {
 
   @Override
   public String toString() {
-    return String.format(
-        """
-			Product	 Name: %s
-			Stock: %d
-			""",
-        this.name, this.stock);
+    return String.format("""
+			 -Name: %s
+			 -Stock: %d
+			""", this.name, this.stock);
   }
 }

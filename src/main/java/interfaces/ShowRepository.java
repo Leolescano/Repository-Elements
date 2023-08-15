@@ -1,5 +1,5 @@
 package interfaces;
 
 public interface ShowRepository {
-  void showRepository();
+  void showRepository(String typeRepository);
 }
